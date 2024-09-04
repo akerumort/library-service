@@ -16,6 +16,6 @@ CREATE TABLE book_author (
     author_id BIGINT NOT NULL,
     book_id BIGINT NOT NULL,
     PRIMARY KEY (author_id, book_id),
-    FOREIGN KEY (author_id) REFERENCES book(id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFERENCES author(id) ON DELETE CASCADE
+    FOREIGN KEY (author_id) REFERENCES author(id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE
 )

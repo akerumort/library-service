@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +24,10 @@ public class BookService {
 
     public BookDTO getBookById(Long id) {
         return bookMapper.toDTO(bookRepository.findById(id).orElse(null));
+    }
+
+    public List<Book> getBooksByIds(Set<Long> ids) {
+        return bookRepository.findAllById(ids);
     }
 
     public BookDTO createBook(BookDTO bookDTO) {

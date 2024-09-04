@@ -2,7 +2,7 @@ CREATE TABLE author (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
-    county VARCHAR(255) NOT NULL
+    country VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE book (

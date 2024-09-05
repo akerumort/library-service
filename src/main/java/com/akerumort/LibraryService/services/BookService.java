@@ -3,6 +3,7 @@ package com.akerumort.LibraryService.services;
 import com.akerumort.LibraryService.dto.BookDTO;
 import com.akerumort.LibraryService.entities.Author;
 import com.akerumort.LibraryService.entities.Book;
+import com.akerumort.LibraryService.exceptions.CustomException;
 import com.akerumort.LibraryService.mappers.BookMapper;
 import com.akerumort.LibraryService.repos.BookRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,21 +40,24 @@ public class BookService {
     }
 
     public BookDTO createBook(BookDTO bookDTO) {
-        Book book = bookMapper.toEntity(bookDTO);
 
-        if (bookDTO.getAuthorIds() != null && !bookDTO.getAuthorIds().isEmpty()) {
-            Set<Author> authors = authorService.getAuthorsByIds(bookDTO.getAuthorIds().stream().collect(Collectors.toSet()));
-            book.setAuthors(authors);
+        if (bookDTO.getAuthorIds() == null || bookDTO.getAuthorIds().isEmpty()) {
+            throw new CustomException("A book must have at least one author.");
         }
 
+        Set<Author> authors = authorService.getAuthorsByIds(bookDTO.getAuthorIds().stream().collect(Collectors.toSet()));
+
+        if (authors.size() != bookDTO.getAuthorIds().size()) {
+            throw new CustomException("One or more of the authors listed do not exist.");
+        }
+
+        Book book = bookMapper.toEntity(bookDTO);
+        book.setAuthors(authors);
         Book savedBook = bookRepository.save(book);
 
-        // Обновление авторов с новой книгой
-        if (savedBook.getAuthors() != null) {
-            for (Author author : savedBook.getAuthors()) {
-                author.getBooks().add(savedBook);
-                authorService.saveAuthor(author); // Добавляем метод saveAuthor в AuthorService
-            }
+        for (Author author : savedBook.getAuthors()) {
+            author.getBooks().add(savedBook);
+            authorService.saveAuthor(author);
         }
 
         return bookMapper.toDTO(bookRepository.save(book));
@@ -69,10 +73,20 @@ public class BookService {
 
         if (bookDTO.getAuthorIds() != null && !bookDTO.getAuthorIds().isEmpty()) {
             Set<Author> authors = authorService.getAuthorsByIds(bookDTO.getAuthorIds().stream().collect(Collectors.toSet()));
+            if (authors.size() != bookDTO.getAuthorIds().size()) {
+                throw new CustomException("One or more of the authors listed do not exist.");
+            }
             book.setAuthors(authors);
         }
 
-        return bookMapper.toDTO(bookRepository.save(book));
+        Book updatedBook = bookRepository.save(book);
+
+        for (Author author : updatedBook.getAuthors()) {
+            author.getBooks().add(updatedBook);
+            authorService.saveAuthor(author);
+        }
+
+        return bookMapper.toDTO(updatedBook);
     }
 
     public void deleteBook(Long id) {

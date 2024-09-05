@@ -89,4 +89,22 @@ public class AuthorService {
     public void saveAuthor(Author author) {
         authorRepository.save(author);
     }
+
+    public AuthorDTO addBooksToAuthor(Long authorId, Set<Long> bookIds) {
+        Author author = authorRepository.findById(authorId).orElseThrow(()->
+                new CustomException("Author with ID " + authorId + " does not exist."));
+        Set<Book> books = bookRepository.findAllById(bookIds).stream().collect(Collectors.toSet());
+
+        if (books.size() != bookIds.size()) {
+            throw new CustomException("One or more of the books listed do not exist.");
+        }
+
+        author.getBooks().addAll(books);
+        books.forEach(book -> book.getAuthors().add(author));
+
+        authorRepository.save(author);
+        bookRepository.saveAll(books);
+
+        return authorMapper.toDTO(author);
+    }
 }

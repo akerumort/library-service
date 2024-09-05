@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/authors")
@@ -52,5 +53,11 @@ public class AuthorController {
     public ResponseEntity<Void> deleteAllAuthors() {
         authorService.deleteAllAuthors();
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/add-books")
+    public ResponseEntity<AuthorDTO> addBooksToAuthor(@PathVariable Long id, @RequestBody Set<Long> bookIds) {
+        AuthorDTO author = authorService.addBooksToAuthor(id, bookIds);
+        return ResponseEntity.ok(author);
     }
 }

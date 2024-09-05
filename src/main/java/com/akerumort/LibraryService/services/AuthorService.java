@@ -3,10 +3,12 @@ package com.akerumort.LibraryService.services;
 import com.akerumort.LibraryService.dto.AuthorDTO;
 import com.akerumort.LibraryService.entities.Author;
 import com.akerumort.LibraryService.entities.Book;
+import com.akerumort.LibraryService.exceptions.CustomException;
 import com.akerumort.LibraryService.mappers.AuthorMapper;
 import com.akerumort.LibraryService.repos.AuthorRepository;
 import com.akerumort.LibraryService.repos.BookRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,24 +38,34 @@ public class AuthorService {
     }
 
     public AuthorDTO createAuthor(AuthorDTO authorDTO) {
-        Author author = authorMapper.toEntity(authorDTO);
+
         if (authorDTO.getBookIds() != null) {
             Set<Book> books = bookRepository.findAllById(authorDTO.getBookIds()).stream().collect(Collectors.toSet());
+            if (books.size() != authorDTO.getBookIds().size()) {
+                throw new CustomException("One or more of the books listed do not exist.");
+            }
+            Author author = authorMapper.toEntity(authorDTO);
             author.setBooks(books);
+            return authorMapper.toDTO(authorRepository.save(author));
         }
+
+        Author author = authorMapper.toEntity(authorDTO);
         return authorMapper.toDTO(authorRepository.save(author));
     }
 
     public AuthorDTO updateAuthor(Long id, AuthorDTO authorDTO) {
 
         if (!authorRepository.existsById(id)) {
-            return null;
+            throw new CustomException("Author with ID " + id + " does not exist.");
         }
 
         Author author = authorMapper.toEntity(authorDTO);
 
         if (authorDTO.getBookIds() != null) {
             Set<Book> books = bookRepository.findAllById(authorDTO.getBookIds()).stream().collect(Collectors.toSet());
+            if (books.size() != authorDTO.getBookIds().size()) {
+                throw new CustomException("One or more of the books listed do not exist.");
+            }
             author.setBooks(books);
         }
         author.setId(id);
@@ -61,8 +73,12 @@ public class AuthorService {
     }
 
     public void deleteAuthor(Long id) {
-        if (authorRepository.existsById(id)) {
-            authorRepository.deleteById(id);
+        try {
+            if (authorRepository.existsById(id)) {
+                authorRepository.deleteById(id);
+            }
+        } catch (EmptyResultDataAccessException e) {
+            throw new CustomException("Author with ID " + id + " does not exist.");
         }
     }
 

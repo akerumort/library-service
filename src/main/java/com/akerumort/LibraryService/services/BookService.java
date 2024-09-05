@@ -8,6 +8,7 @@ import com.akerumort.LibraryService.mappers.BookMapper;
 import com.akerumort.LibraryService.repos.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -90,8 +91,12 @@ public class BookService {
     }
 
     public void deleteBook(Long id) {
-        if (bookRepository.existsById(id)) {
-            bookRepository.deleteById(id);
+        try {
+            if (bookRepository.existsById(id)) {
+                bookRepository.deleteById(id);
+            }
+        } catch (EmptyResultDataAccessException e) {
+            throw new CustomException("Book with ID " + id + " does not exist.");
         }
     }
 

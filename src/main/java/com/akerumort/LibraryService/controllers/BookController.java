@@ -2,6 +2,7 @@ package com.akerumort.LibraryService.controllers;
 
 import com.akerumort.LibraryService.dto.BookDTO;
 import com.akerumort.LibraryService.services.BookService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,14 +30,14 @@ public class BookController {
     }
 
     @PostMapping
-    public ResponseEntity<BookDTO> createBook(@RequestBody BookDTO bookDTO) {
+    public ResponseEntity<BookDTO> createBook(@RequestBody @Valid BookDTO bookDTO) {
         BookDTO createdBook = bookService.createBook(bookDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdBook);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<BookDTO> updateBook(@PathVariable Long id,
-                                              @RequestBody BookDTO bookDTO) {
+                                              @RequestBody @Valid BookDTO bookDTO) {
         BookDTO updatedBook = bookService.updateBook(id, bookDTO);
         return updatedBook != null ? ResponseEntity.ok(updatedBook) : ResponseEntity.notFound().build();
     }

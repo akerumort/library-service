@@ -38,10 +38,10 @@ public class AuthorService {
     }
 
     public AuthorDTO createAuthor(AuthorDTO authorDTO) {
-
-        if (authorDTO.getBookIds() != null) {
-            Set<Book> books = bookRepository.findAllById(authorDTO.getBookIds()).stream().collect(Collectors.toSet());
-            if (books.size() != authorDTO.getBookIds().size()) {
+        Set<Long> bookIds = authorDTO.getBookIds();
+        if (bookIds != null && !bookIds.isEmpty()) {
+            Set<Book> books = bookRepository.findAllById(bookIds).stream().collect(Collectors.toSet());
+            if (books.size() != bookIds.size()) {
                 throw new CustomException("One or more of the books listed do not exist.");
             }
             Author author = authorMapper.toEntity(authorDTO);

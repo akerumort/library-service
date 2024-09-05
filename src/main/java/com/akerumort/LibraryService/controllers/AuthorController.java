@@ -2,6 +2,7 @@ package com.akerumort.LibraryService.controllers;
 
 import com.akerumort.LibraryService.dto.AuthorDTO;
 import com.akerumort.LibraryService.services.AuthorService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,14 +30,14 @@ public class AuthorController {
     }
 
     @PostMapping
-    public ResponseEntity<AuthorDTO> createAuthor(@RequestBody AuthorDTO authorDTO) {
+    public ResponseEntity<AuthorDTO> createAuthor(@RequestBody @Valid AuthorDTO authorDTO) {
         AuthorDTO createdAuthor = authorService.createAuthor(authorDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAuthor);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<AuthorDTO> updateAuthor(@PathVariable Long id,
-                                                  @RequestBody AuthorDTO authorDTO) {
+                                                  @RequestBody @Valid AuthorDTO authorDTO) {
         AuthorDTO updatedAuthor = authorService.updateAuthor(id, authorDTO);
         return updatedAuthor != null ? ResponseEntity.ok(updatedAuthor) : ResponseEntity.notFound().build();
     }

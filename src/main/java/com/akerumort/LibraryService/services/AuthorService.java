@@ -5,6 +5,7 @@ import com.akerumort.LibraryService.entities.Author;
 import com.akerumort.LibraryService.entities.Book;
 import com.akerumort.LibraryService.mappers.AuthorMapper;
 import com.akerumort.LibraryService.repos.AuthorRepository;
+import com.akerumort.LibraryService.repos.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,20 +19,26 @@ public class AuthorService {
 
     private final AuthorRepository authorRepository; // final для иммутабельности
     private final AuthorMapper authorMapper;
-    private final BookService bookService;
+    private final BookRepository bookRepository;
 
     public List<AuthorDTO> getAllAuthors() {
         return authorRepository.findAll().stream().map(authorMapper::toDTO).collect(Collectors.toList());
     }
 
     public AuthorDTO getAuthorById(Long id) {
-        return authorMapper.toDTO(authorRepository.findById(id).orElse(null));
+        return authorMapper.toDTO(authorRepository
+                .findById(id)
+                .orElse(null));
+    }
+
+    public Set<Author> getAuthorsByIds(Set<Long> ids) {
+        return authorRepository.findAllById(ids).stream().collect(Collectors.toSet());
     }
 
     public AuthorDTO createAuthor(AuthorDTO authorDTO) {
         Author author = authorMapper.toEntity(authorDTO);
         if (authorDTO.getBookIds() != null) {
-            Set<Book> books = bookService.getBooksByIds(authorDTO.getBookIds()).stream().collect(Collectors.toSet());
+            Set<Book> books = bookRepository.findAllById(authorDTO.getBookIds()).stream().collect(Collectors.toSet());
             author.setBooks(books);
         }
         return authorMapper.toDTO(authorRepository.save(author));
@@ -46,7 +53,7 @@ public class AuthorService {
         Author author = authorMapper.toEntity(authorDTO);
 
         if (authorDTO.getBookIds() != null) {
-            Set<Book> books = bookService.getBooksByIds(authorDTO.getBookIds()).stream().collect(Collectors.toSet());
+            Set<Book> books = bookRepository.findAllById(authorDTO.getBookIds()).stream().collect(Collectors.toSet());
             author.setBooks(books);
         }
         author.setId(id);
@@ -61,5 +68,9 @@ public class AuthorService {
 
     public void deleteAllAuthors() {
         authorRepository.deleteAll();
+    }
+
+    public void saveAuthor(Author author) {
+        authorRepository.save(author);
     }
 }

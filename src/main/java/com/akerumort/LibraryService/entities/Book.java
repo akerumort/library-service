@@ -29,5 +29,4 @@ public class Book {
 
     @ManyToMany(mappedBy = "books")
     private Set<Author> authors;
-
 }

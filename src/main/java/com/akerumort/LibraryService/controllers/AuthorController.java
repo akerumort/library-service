@@ -1,6 +1,7 @@
 package com.akerumort.LibraryService.controllers;
 
 import com.akerumort.LibraryService.dto.AuthorDTO;
+import com.akerumort.LibraryService.dto.BookIdsDTO;
 import com.akerumort.LibraryService.services.AuthorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -56,8 +57,9 @@ public class AuthorController {
     }
 
     @PostMapping("/{id}/add-books")
-    public ResponseEntity<AuthorDTO> addBooksToAuthor(@PathVariable Long id, @RequestBody Set<Long> bookIds) {
-        AuthorDTO author = authorService.addBooksToAuthor(id, bookIds);
+    public ResponseEntity<AuthorDTO> addBooksToAuthor(@PathVariable Long id,
+                                                      @RequestBody @Valid BookIdsDTO bookIdsDTO) {
+        AuthorDTO author = authorService.addBooksToAuthor(id, bookIdsDTO.getBookIds());
         return ResponseEntity.ok(author);
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -71,19 +72,45 @@ public class AuthorService {
             throw new CustomException("Author with ID " + id + " does not exist.");
         }
 
-        Author author = authorMapper.toEntity(authorDTO);
+        Author existingAuthor = authorRepository.findById(id).orElseThrow(() ->
+                new CustomException("Author with ID " + id + " does not exist."));
 
-        if (authorDTO.getBookIds() != null) {
-            Set<Book> books = bookRepository.findAllById(authorDTO.getBookIds()).stream().collect(Collectors.toSet());
-            if (books.size() != authorDTO.getBookIds().size()) {
+        existingAuthor.setFirstName(authorDTO.getFirstName());
+        existingAuthor.setLastName(authorDTO.getLastName());
+        existingAuthor.setCountry(authorDTO.getCountry());
+
+        Set<Book> newBooks = new HashSet<>();
+        if (authorDTO.getBookIds() != null && !authorDTO.getBookIds().isEmpty()) {
+            newBooks = bookRepository.findAllById(authorDTO.getBookIds()).stream().collect(Collectors.toSet());
+            if (newBooks.size() != authorDTO.getBookIds().size()) {
                 logger.error("One or more of the books listed do not exist. " +
-                        "Provided IDs: {}, Existing IDs: {}", authorDTO.getBookIds(),
-                        books.stream().map(Book::getId).collect(Collectors.toSet()));
+                                "Provided IDs: {}, Existing IDs: {}", authorDTO.getBookIds(),
+                        newBooks.stream().map(Book::getId).collect(Collectors.toSet()));
                 throw new CustomException("One or more of the books listed do not exist.");
             }
-            author.setBooks(books);
         }
-        Author updatedAuthor = authorRepository.save(author);
+
+        Set<Book> currentBooks = existingAuthor.getBooks();
+
+        // удаляем старые книги
+        for (Book book : currentBooks) {
+            if (!newBooks.contains(book)) {
+                book.getAuthors().remove(existingAuthor);
+                bookRepository.save(book);
+            }
+        }
+
+        existingAuthor.setBooks(newBooks);
+
+        // добавляем новые книги к автору
+        for (Book book : newBooks) {
+            if (!book.getAuthors().contains(existingAuthor)) {
+                book.getAuthors().add(existingAuthor);
+                bookRepository.save(book);
+            }
+        }
+
+        Author updatedAuthor = authorRepository.save(existingAuthor);
         logger.info("Author updated successfully with ID: {}", updatedAuthor.getId());
         return authorMapper.toDTO(updatedAuthor);
     }

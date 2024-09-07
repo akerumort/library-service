@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -80,28 +81,46 @@ public class BookService {
             return null;
         }
 
-        Book book = bookMapper.toEntity(bookDTO);
-        book.setId(id);
+        Book existingBook = bookRepository.findById(id).orElseThrow(() ->
+                new CustomException("Book with ID " + id + " does not exist."));
 
+        existingBook.setTitle(bookDTO.getTitle());
+        existingBook.setGenre(bookDTO.getGenre());
+        existingBook.setPublicationYear(bookDTO.getPublicationYear());
+
+        Set<Author> newAuthors = new HashSet<>();
         if (bookDTO.getAuthorIds() != null && !bookDTO.getAuthorIds().isEmpty()) {
-            Set<Author> authors = authorService.getAuthorsByIds(bookDTO.getAuthorIds()
+            newAuthors = authorService.getAuthorsByIds(bookDTO.getAuthorIds()
                     .stream().collect(Collectors.toSet()));
-            if (authors.size() != bookDTO.getAuthorIds().size()) {
+            if (newAuthors.size() != bookDTO.getAuthorIds().size()) {
                 logger.error("One or more of the authors listed do not exist. " +
-                        "Provided IDs: {}, Existing IDs: {}", bookDTO.getAuthorIds(),
-                        authors.stream().map(Author::getId).collect(Collectors.toSet()));
+                                "Provided IDs: {}, Existing IDs: {}", bookDTO.getAuthorIds(),
+                        newAuthors.stream().map(Author::getId).collect(Collectors.toSet()));
                 throw new CustomException("One or more of the authors listed do not exist.");
             }
-            book.setAuthors(authors);
         }
 
-        Book updatedBook = bookRepository.save(book);
+        Set<Author> currentAuthors = existingBook.getAuthors();
 
-        for (Author author : updatedBook.getAuthors()) {
-            author.getBooks().add(updatedBook);
-            authorService.saveAuthor(author);
+        // удаляем книгу у старых авторов
+        for (Author author : currentAuthors) {
+            if (!newAuthors.contains(author)) {
+                author.getBooks().remove(existingBook);
+                authorService.saveAuthor(author);
+            }
         }
 
+        existingBook.setAuthors(newAuthors);
+
+        // добавляем книгу к новым авторам
+        for (Author author : newAuthors) {
+            if (!author.getBooks().contains(existingBook)) {
+                author.getBooks().add(existingBook);
+                authorService.saveAuthor(author);
+            }
+        }
+
+        Book updatedBook = bookRepository.save(existingBook);
         logger.info("Book updated successfully with ID: {}", updatedBook.getId());
         return bookMapper.toDTO(updatedBook);
     }

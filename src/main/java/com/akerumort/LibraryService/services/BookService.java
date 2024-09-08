@@ -7,7 +7,6 @@ import com.akerumort.LibraryService.exceptions.CustomException;
 import com.akerumort.LibraryService.mappers.BookMapper;
 import com.akerumort.LibraryService.repos.BookRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.apache.logging.log4j.LogManager;
@@ -26,12 +25,7 @@ public class BookService {
     private static final Logger logger = LogManager.getLogger(BookService.class);
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
-    private AuthorService authorService;
-
-    @Autowired
-    public void setAuthorService(AuthorService authorService) {
-        this.authorService = authorService;
-    }
+    private final AuthorService authorService;
 
     public List<BookDTO> getAllBooks() {
         logger.info("Fetching all books");
@@ -70,7 +64,7 @@ public class BookService {
         }
 
         logger.info("Book created successfully with ID: {}", savedBook.getId());
-        return bookMapper.toDTO(bookRepository.save(book));
+        return bookMapper.toDTO(savedBook);
     }
 
     public BookDTO updateBook(Long id, BookDTO bookDTO) {
@@ -78,7 +72,7 @@ public class BookService {
 
         if (!bookRepository.existsById(id)) {
             logger.error("Book with ID {} does not exist.", id);
-            return null;
+            throw new CustomException("Book with ID " + id + " does not exist.");
         }
 
         Book existingBook = bookRepository.findById(id).orElseThrow(() ->

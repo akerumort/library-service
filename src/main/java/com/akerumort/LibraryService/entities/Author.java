@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -40,5 +41,5 @@ public class Author {
             inverseJoinColumns = @JoinColumn(name = "book_id")
     )
     @Schema(description = "Set of books associated with the author")
-    private Set<Book> books;
+    private Set<Book> books = new HashSet<>();
 }

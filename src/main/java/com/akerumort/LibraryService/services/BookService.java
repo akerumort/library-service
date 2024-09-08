@@ -6,6 +6,7 @@ import com.akerumort.LibraryService.entities.Book;
 import com.akerumort.LibraryService.exceptions.CustomException;
 import com.akerumort.LibraryService.mappers.BookMapper;
 import com.akerumort.LibraryService.repos.BookRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ public class BookService {
         return bookMapper.toDTO(bookRepository.findById(id).orElse(null));
     }
 
+    @Transactional
     public BookDTO createBook(BookDTO bookDTO) {
         logger.info("Creating new book...");
 
@@ -67,6 +69,7 @@ public class BookService {
         return bookMapper.toDTO(savedBook);
     }
 
+    @Transactional
     public BookDTO updateBook(Long id, BookDTO bookDTO) {
         logger.info("Updating book with ID: {}", id);
 
@@ -119,6 +122,7 @@ public class BookService {
         return bookMapper.toDTO(updatedBook);
     }
 
+    @Transactional
     public void deleteBook(Long id) {
         logger.info("Deleting book with ID: {}", id);
         try {
@@ -131,6 +135,7 @@ public class BookService {
         }
     }
 
+    @Transactional
     public void deleteAllBooks() {
         logger.info("Deleting all books...");
         bookRepository.deleteAll();

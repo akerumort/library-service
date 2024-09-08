@@ -7,6 +7,7 @@ import com.akerumort.LibraryService.exceptions.CustomException;
 import com.akerumort.LibraryService.mappers.AuthorMapper;
 import com.akerumort.LibraryService.repos.AuthorRepository;
 import com.akerumort.LibraryService.repos.BookRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class AuthorService {
         return authorRepository.findAllById(ids).stream().collect(Collectors.toSet());
     }
 
+    @Transactional
     public AuthorDTO createAuthor(AuthorDTO authorDTO) {
         logger.info("Creating new author...");
 
@@ -64,6 +66,7 @@ public class AuthorService {
         return authorMapper.toDTO(authorRepository.save(author));
     }
 
+    @Transactional
     public AuthorDTO updateAuthor(Long id, AuthorDTO authorDTO) {
         logger.info("Updating author with ID: {}", id);
 
@@ -115,6 +118,7 @@ public class AuthorService {
         return authorMapper.toDTO(updatedAuthor);
     }
 
+    @Transactional
     public void deleteAuthor(Long id) {
         logger.info("Deleting author with ID: {}", id);
         try {
@@ -127,16 +131,19 @@ public class AuthorService {
         }
     }
 
+    @Transactional
     public void deleteAllAuthors() {
         logger.info("Deleting all authors");
         authorRepository.deleteAll();
     }
 
+    @Transactional
     public void saveAuthor(Author author) {
         logger.info("Saving author: {}", author);
         authorRepository.save(author);
     }
 
+    @Transactional
     public AuthorDTO addBooksToAuthor(Long authorId, Set<Long> bookIds) {
         logger.info("Adding books to author with ID: {}", authorId);
         Author author = authorRepository.findById(authorId).orElseThrow(()->
